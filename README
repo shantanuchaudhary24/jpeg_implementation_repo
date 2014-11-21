@@ -3,8 +3,18 @@
 
                                 JPEG FORMAT IMPLEMENTATION
 
-###############################################################################################
+################################################################################################
 
                                         Contributors:
                                 Shantanu Chaudhary (2010CS50295)
                                 Harshal Bidasaria (2010CS50283)
+                                
+################################################################################################
+This directory contains the following:
+README				: Project README
+CoolCoolEncoderDecoder.class 	: JAVA Auxiliary program for variable length coding.
+encoder				: Source code for CoolCoolEncoderDecoder
+images				: Sample test cases
+Matlab Scripts			: jpeg.m, invZigzag.m, mycell2mat.m, jpegEncoder.m, jpegDecoder.m
+				  strsplit.m, SubSample/m, SuperSample.m, zigzag.m
+				  

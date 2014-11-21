@@ -5,19 +5,13 @@ clear all;
 
 file1 = imread('images/s1.png');
 file2 = imread('images/s2.png');
+file3 = imread('images/s3.bmp');
 
-img = file2;
-
-% disp(img);
-% error('stop');
+img = file3;
 
 sizeX = size(img,1);
 sizeY = size(img,2);
 img_YCbCr = rgb2ycbcr(img);    % Convert to YCbCr Color Space
-
-% imshow(img_YCbCr);
-% disp(img);
-% error('stop');
 
 % Standard JPEG Quantization Tables for Y Component
 STD_Y_Qt_Mask = [
@@ -41,40 +35,64 @@ STD_Cb_Cr_Qt_Mask = [
     99,  99,  99,  99,  99,  99,  99,  99
     99,  99,  99,  99,  99,  99,  99,  99];
 
-% disp(img);
-% error('stop');
-% imshow(img_YCbCr(:,:,2));
-
 Y_component = img_YCbCr(:,:,1);
 Cb_component = img_YCbCr(:,:,2);
 Cr_component = img_YCbCr(:,:,3);
 
+% SubSample Cb and Cr color components
+ Cb_component_subsampled = SubSample(Cb_component);
+ Cr_component_subsampled = SubSample(Cr_component);
+
+%  disp(size(Cb_component_subsampled));
+%  disp(size(Cr_component_subsampled));
+% error('Stop!');
 
 Y_component_transformed_linear = jpegEncoder(Y_component, STD_Y_Qt_Mask);
-Cb_component_transformed_linear = jpegEncoder(Cb_component, STD_Cb_Cr_Qt_Mask);
-Cr_component_transformed_linear = jpegEncoder(Cr_component, STD_Cb_Cr_Qt_Mask);
+Cb_component_transformed_linear = jpegEncoder(Cb_component_subsampled, STD_Cb_Cr_Qt_Mask);
+Cr_component_transformed_linear = jpegEncoder(Cr_component_subsampled, STD_Cb_Cr_Qt_Mask);
 
-%  disp(size(Y_component_linear));
-%  disp(size(Cb_component_linear));
-%  disp(size(Cr_component_linear));
+% Space separated valued are written to a file
+dlmwrite('Encoded.txt',Y_component_transformed_linear);
+dlmwrite('Encoded.txt',Cb_component_transformed_linear,'-append');
+dlmwrite('Encoded.txt',Cr_component_transformed_linear,'-append');
 
- %  Write the separate components in 3 files
+% java CoolCoolEncoderDecoder [filename] [1 for encode the content of filename / 2 for printing out decoded version of the content of filename]
+str_cmd = 'java CoolCoolEncoderDecoder Encoded.txt 1';
+[status, cmdout] = unix(str_cmd);
+
+str_cmd = 'java CoolCoolEncoderDecoder Encoded.txt 2';
+[status, cmdout] = unix(str_cmd);
+
+C = strsplit(cmdout, '_');
+
+Y_component_decoded = strsplit(C{1,1}, ',');
+Cb_component_decoded = strsplit(C{1,2}, ',');
+Cr_component_decoded = strsplit(C{1,3}, ',');
+
+Y_component_decoded = mycell2mat(Y_component_decoded);
+Cb_component_decoded = mycell2mat(Cb_component_decoded);
+Cr_component_decoded = mycell2mat(Cr_component_decoded);
 
 % Now we use the decoder to get back the image.
-Y_component_compressed = jpegDecoder(Y_component_transformed_linear, STD_Y_Qt_Mask, sizeX, sizeY);
-Cb_component_compressed = jpegDecoder(Cb_component_transformed_linear, STD_Cb_Cr_Qt_Mask, sizeX, sizeY);
-Cr_component_compressed = jpegDecoder(Cr_component_transformed_linear, STD_Cb_Cr_Qt_Mask, sizeX, sizeY);
+ Y_component_compressed = jpegDecoder(Y_component_decoded, STD_Y_Qt_Mask);
 
-%  disp(size(Y_component));
-%  disp(size(Cb_component));
-%  disp(size(Cr_component));
-
-newImg_YCbCr(:,:,1) = Y_component_compressed;
-newImg_YCbCr(:,:,2) = Cb_component_compressed;
-newImg_YCbCr(:,:,3) = Cr_component_compressed;
+%  disp(size(Cb_component_decoded));
  
-newImg_RGB = ycbcr2rgb(newImg_YCbCr);
-imshow(newImg_RGB);
-[PSNR1,MSE1,] = measerr(img,newImg_RGB);
-fprintf('PeakSignalToNoiseRatio :%f Mean Square Error :%f',PSNR1, MSE1);
+ Cb_component_compressed = jpegDecoder(Cb_component_decoded, STD_Cb_Cr_Qt_Mask);
+ Cr_component_compressed = jpegDecoder(Cr_component_decoded, STD_Cb_Cr_Qt_Mask);
 
+% Super sample Cb and Cr
+ Cb_component_superSampled = SuperSample(Cb_component_compressed);
+ Cr_component_superSampled = SuperSample(Cr_component_compressed);
+ 
+ newImg_YCbCr(:,:,1) = Y_component_compressed;
+ newImg_YCbCr(:,:,2) = Cb_component_superSampled;
+ newImg_YCbCr(:,:,3) = Cr_component_superSampled;
+ 
+ newImg_RGB = ycbcr2rgb(newImg_YCbCr);
+ 
+ subplot(1,2,1), imshow(img)
+ subplot(1,2,2), imshow(newImg_RGB)
+
+ [PSNR1,MSE1,] = measerr(img,newImg_RGB);
+ fprintf('PeakSignalToNoiseRatio :%f Mean Square Error :%f',PSNR1, MSE1);
