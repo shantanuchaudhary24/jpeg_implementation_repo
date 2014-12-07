@@ -1,4 +1,4 @@
-function output_array = jpegDecoder(linear_array, mask)
+function output_array = jpegDecoder(linear_array, mask, dctTransform)
 
 % Custom Block Size
 BlockSize = 8;
@@ -15,7 +15,7 @@ for i=1:1:sizeXPrime
         k = k + stepSize;
     end
 end
-
+fprintf('Inverse Zigzag Scan Completed\n');
 
 %   SubBlockCell = mat2cell(inputmatrix,dim1Dist,dim2Dist);
    HSizeCell = size(BlockCell,1);
@@ -27,19 +27,26 @@ end
         BlockCell{i,j} = BlockCell{i,j}.*mask;
       end
   end
-    
+  
   % Initialise transform cells
   TransformedCell_IDCT = cell(HSizeCell,WSizeCell);
   for i=1:HSizeCell
       for j=1:WSizeCell
-          TransformedCell_IDCT{i,j} = idct2(BlockCell{i,j});
+          if (dctTransform)   
+            TransformedCell_IDCT{i,j} = idct2(BlockCell{i,j});
+          else
+            TransformedCell_IDCT{i,j} = real(ifft2(BlockCell{i,j}));
+          
+          end
       end
   end
+  fprintf('Inverse Transformation Completed\n');
+  
   output_array = cell2mat(TransformedCell_IDCT);
   
-% Level Offset (Shift to mean by subtracting 128)
+% Level Offset (Shift from mean by adding 128)
 offsetMatrix = ones(SqDim,SqDim).*128;
 output_array = output_array + offsetMatrix;
 output_array = uint8(output_array);
-
+fprintf('Level Offset Recovered\n');
 end
