@@ -1,20 +1,58 @@
 ################################################################################################
 
-
-                                JPEG FORMAT IMPLEMENTATION
+					     README
 
 ################################################################################################
 
-                                        Contributors:
-                                Shantanu Chaudhary (2010CS50295)
-                                Harshal Bidasaria (2010CS50283)
-                                
+This repository contains code for JPEG format implemented using matlab+java. The implementation
+is not truly JPEG compliant as we have not written JPEG headers to the file. The implementation
+mimics the various phases involved in JPEG compression.
+% General Steps involved in JPEG encoding
+% Color Space Transformation (RGB -> YCbCr)
+% Subsample Cb, Cr Component (We have employed 4-1-1)
+% Encoding each of the color components:
+%   Shift to mean (Subtract 128)
+%   Convert to sub-blocks, perform transformation, quantize values
+%   Perform ZigZag Scan, linearise the block stream, write to file
+%   Perform Run Length Encoding
+
+% General Steps involved in JPEG Decoding
+% Run length Decoding from file
+% Decoding each of the color components:
+%     Inverse ZigZag scan on linear array to convert to subblocks
+%     Multiple by mask to obtain inverse values
+%     Perform Inverse Transform
+%     Shift from mean (add 128)
+% Supersample Cb, Cr components
+% Color Space Transformation (YCbCr -> RGB)
+
 ################################################################################################
-This directory contains the following:
+
+Collaborators:
+Shantanu Chaudhary (shantanuchaudhary24@gmail.com)
+Harshal Bidasaria (harshalbid271@gmail.com)
+
+################################################################################################
+
+Folder hierarchy:
 README				: Project README
 CoolCoolEncoderDecoder.class 	: JAVA Auxiliary program for variable length coding.
 encoder				: Source code for CoolCoolEncoderDecoder
-images				: Sample test cases
-Matlab Scripts			: jpeg.m, invZigzag.m, mycell2mat.m, jpegEncoder.m, jpegDecoder.m
-				  strsplit.m, SubSample/m, SuperSample.m, zigzag.m
-				  
+images				: Sample test cases, output images
+Matlab Scripts			: jpeg.m, invZigzag.m, mycell2mat.m, jpegEncoder.m,jpegDecoder.m
+				  strsplit.m, SubSample.m, SuperSample.m, zigzag.m
+
+################################################################################################
+
+Dependencies:
+-> Matlab
+-> Java
+
+################################################################################################
+
+Setting up project code:
+-> Clone the repository
+-> Import Matlab code from specific implementation you want to run into matlab
+-> Run "jpeg.m" for that implementation
+                                
+################################################################################################				  
